@@ -1,3 +1,5 @@
+import { notifyUnauthorized } from "@/lib/auth-unauthorized";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
 export class ApiError extends Error {
@@ -8,6 +10,10 @@ export class ApiError extends Error {
     super(message);
     this.name = "ApiError";
   }
+}
+
+export function isUnauthorizedError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
 }
 
 type RequestOptions = RequestInit & {
@@ -46,6 +52,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       }
     } catch {
       message = response.statusText || message;
+    }
+    if (response.status === 401) {
+      notifyUnauthorized();
     }
     throw new ApiError(response.status, message);
   }

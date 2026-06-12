@@ -10,64 +10,74 @@ import { Card, PageContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useModal } from "@/contexts/ModalContext";
 import { useTranslation } from "@/contexts/LanguageContext";
-import { api } from "@/lib/api";
-import type { Client, Paginated, User } from "@/types/api";
+import { formatClientConflict, useClientAvailabilityCheck } from "@/hooks/useClientAvailabilityCheck";
+import { useClientWorkflow } from "@/hooks/useClientWorkflow";
+import { ApiError, api, isUnauthorizedError } from "@/lib/api";
+import type { Client, Paginated } from "@/types/api";
 
 export default function ClientesPage() {
-  const { token, hasPermission } = useAuth();
+  const { token, hasPermission, isLoading: authLoading } = useAuth();
   const { t } = useTranslation();
+  const modal = useModal();
+  const { approveClient, rejectClient, resubmitClient } = useClientWorkflow(token);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "" });
-  const [advisors, setAdvisors] = useState<User[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const { availability, checking, hasConflict } = useClientAvailabilityCheck(
+    token,
+    form.email,
+    form.phone,
+    { enabled: showForm },
+  );
+
+  const emailError = availability?.email
+    ? formatClientConflict(t, "email", availability.email)
+    : undefined;
+  const phoneError = availability?.phone
+    ? formatClientConflict(t, "phone", availability.phone)
+    : undefined;
 
   const load = useCallback(async () => {
-    if (!token) return;
+    if (authLoading || !token) return;
     setLoading(true);
-    const data = await api.get<Paginated<Client>>("/clients", token);
-    setClients(data.items);
-    if (hasPermission("users:read")) {
-      const users = await api.get<Paginated<User>>("/users", token);
-      setAdvisors(users.items.filter((u) => u.role.code === "ADVISOR"));
+    try {
+      const data = await api.get<Paginated<Client>>("/clients", token);
+      setClients(data.items);
+    } catch (err) {
+      if (!isUnauthorizedError(err)) {
+        throw err;
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [token, hasPermission]);
+  }, [authLoading, token]);
 
   useEffect(() => {
-    load();
+    void load().catch(() => {});
   }, [load]);
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
-    if (!token) return;
-    await api.post("/clients", form, token);
-    setShowForm(false);
-    setForm({ first_name: "", last_name: "", email: "", phone: "" });
-    load();
-  }
-
-  async function handleApprove(clientId: number) {
-    const advisorId = advisors[0]?.id;
-    if (!token || !advisorId) {
-      alert(t("clients.noAdvisors"));
-      return;
+    if (!token || hasConflict) return;
+    setSubmitting(true);
+    try {
+      await api.post("/clients", form, token);
+      setShowForm(false);
+      setForm({ first_name: "", last_name: "", email: "", phone: "" });
+      await load();
+    } catch (err) {
+      await modal.alert({
+        title: t("common.error"),
+        message: err instanceof ApiError ? err.message : t("common.error"),
+        variant: "error",
+      });
+    } finally {
+      setSubmitting(false);
     }
-    const res = await api.post<{ client: Client; temp_password: string }>(
-      `/clients/${clientId}/approve`,
-      { advisor_user_id: advisorId },
-      token,
-    );
-    alert(t("clients.approvedAlert", { password: res.temp_password }));
-    load();
-  }
-
-  async function handleReject(clientId: number) {
-    const reason = prompt(t("clients.rejectPrompt"));
-    if (!reason || !token) return;
-    await api.post(`/clients/${clientId}/reject`, { reason }, token);
-    load();
   }
 
   return (
@@ -92,10 +102,15 @@ export default function ClientesPage() {
             <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
               <Input label={t("common.firstName")} required value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} placeholder="Juan" />
               <Input label={t("common.lastName")} required value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} placeholder="Pérez" />
-              <Input label={t("common.email")} type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="cliente@email.com" />
-              <Input label={t("common.phone")} required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="1131432490" />
-              <div className="sm:col-span-2">
-                <Button type="submit">{t("clients.saveClient")}</Button>
+              <Input label={t("common.email")} type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="cliente@email.com" error={emailError} />
+              <Input label={t("common.phone")} required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="1131432490" error={phoneError} />
+              <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
+                {checking && (
+                  <p className="text-xs text-slate-400">{t("clients.checkingAvailability")}</p>
+                )}
+                <Button type="submit" disabled={submitting || checking || hasConflict}>
+                  {submitting ? t("common.loading") : t("clients.saveClient")}
+                </Button>
               </div>
             </form>
           </Card>
@@ -117,32 +132,38 @@ export default function ClientesPage() {
                 </tr>
               </thead>
               <tbody>
-                {clients.map((c) => (
-                  <tr key={c.id}>
-                    <td>
-                      <Link href={`/clientes/${c.id}`} className="font-semibold text-blue-600 hover:text-blue-800 hover:underline">
-                        {c.first_name} {c.last_name}
-                      </Link>
-                    </td>
-                    <td className="text-slate-500">{c.email}</td>
-                    <td><StatusBadge status={c.status} /></td>
-                    <td>
-                      <div className="flex flex-wrap gap-2">
-                        {c.status === "PENDIENTE_DE_REVISION" && hasPermission("clients:approve") && (
-                          <>
-                            <button type="button" onClick={() => handleApprove(c.id)} className="btn btn-primary btn-sm">{t("clients.approve")}</button>
-                            <button type="button" onClick={() => handleReject(c.id)} className="btn btn-danger btn-sm">{t("clients.reject")}</button>
-                          </>
-                        )}
-                        {c.status === "RECHAZADO" && hasPermission("clients:update") && (
-                          <button type="button" onClick={async () => { await api.post(`/clients/${c.id}/resubmit`, {}, token); load(); }} className="btn btn-secondary btn-sm">
-                            {t("clients.resubmit")}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {clients.map((c) => {
+                  const name = `${c.first_name} ${c.last_name}`;
+                  return (
+                    <tr key={c.id}>
+                      <td>
+                        <Link href={`/clientes/${c.id}`} className="font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+                          {name}
+                        </Link>
+                      </td>
+                      <td className="text-slate-500">{c.email}</td>
+                      <td><StatusBadge status={c.status} /></td>
+                      <td>
+                        <div className="flex flex-wrap gap-2">
+                          <Link href={`/clientes/${c.id}`} className="btn btn-secondary btn-sm">
+                            {t("common.view")}
+                          </Link>
+                          {c.status === "PENDIENTE_DE_REVISION" && hasPermission("clients:approve") && (
+                            <>
+                              <button type="button" onClick={async () => { if (await approveClient(c.id, name)) load(); }} className="btn btn-primary btn-sm">{t("clients.approve")}</button>
+                              <button type="button" onClick={async () => { if (await rejectClient(c.id, name)) load(); }} className="btn btn-danger btn-sm">{t("clients.reject")}</button>
+                            </>
+                          )}
+                          {c.status === "RECHAZADO" && hasPermission("clients:update") && (
+                            <button type="button" onClick={async () => { if (await resubmitClient(c.id, name)) load(); }} className="btn btn-secondary btn-sm">
+                              {t("clients.resubmit")}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {clients.length === 0 && (
                   <tr>
                     <td colSpan={4} className="py-12 text-center text-slate-400">

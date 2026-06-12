@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { NotificationBadge } from "@/components/ui/NotificationBadge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationsContext";
 import { useTranslation } from "@/contexts/LanguageContext";
 
 const internalNav = [
@@ -20,6 +22,7 @@ const clientNav = [
   { href: "/portal/datos", labelKey: "nav.myData", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
   { href: "/portal/documentos", labelKey: "nav.documents", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
   { href: "/portal/tablero", labelKey: "nav.myBoard", icon: "M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" },
+  { href: "/portal/notificaciones", labelKey: "nav.notifications", icon: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" },
 ];
 
 function NavIcon({ d }: { d: string }) {
@@ -34,6 +37,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, hasPermission } = useAuth();
   const { t } = useTranslation();
+  const { unreadCount } = useNotifications();
   const isClient = user?.role.code === "CLIENT";
 
   const items = isClient
@@ -75,7 +79,10 @@ export function Sidebar() {
               }`}
             >
               <NavIcon d={item.icon} />
-              {t(item.labelKey)}
+              <span className="flex-1">{t(item.labelKey)}</span>
+              {(item.href === "/notificaciones" || item.href === "/portal/notificaciones") && unreadCount > 0 && (
+                <NotificationBadge count={unreadCount} className="ring-slate-900" />
+              )}
             </Link>
           );
         })}

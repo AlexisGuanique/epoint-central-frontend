@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/contexts/LanguageContext";
@@ -20,7 +21,7 @@ export function Header({
   const { t } = useTranslation();
 
   return (
-    <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/80 px-6 py-4 backdrop-blur-md lg:px-8">
+    <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 px-6 py-4 backdrop-blur-md lg:px-8">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900 lg:text-2xl">{title}</h1>
@@ -28,6 +29,7 @@ export function Header({
         </div>
         <div className="flex items-center gap-3">
           {actions}
+          <NotificationBell />
           <LanguageSwitcher compact />
           {user && (
             <div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 sm:flex">

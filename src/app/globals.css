@@ -450,6 +450,63 @@ body {
   opacity: 1;
 }
 
+/* ── Notification dropdown ────────────────────────── */
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 50;
+  width: 22rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-soft);
+  background: white;
+  box-shadow: var(--shadow-xl);
+}
+
+.notification-dropdown-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border-soft);
+  padding: 0.875rem 1rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.notification-dropdown-body {
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: block;
+  width: 100%;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.notification-item:hover {
+  background: #f8fafc;
+}
+
+.notification-item-unread {
+  background: #eff6ff;
+}
+
+.notification-item-unread:hover {
+  background: #dbeafe;
+}
+
+.notification-dropdown-footer {
+  border-top: 1px solid var(--border-soft);
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+}
+
 /* ── Scrollbar sutil ──────────────────────────────── */
 ::-webkit-scrollbar {
   width: 8px;

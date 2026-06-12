@@ -9,6 +9,7 @@ import { Input, PasswordInput } from "@/components/ui/Input";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PageContent } from "@/components/ui/Card";
 import { useAuth } from "@/contexts/AuthContext";
+import { useModal } from "@/contexts/ModalContext";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { translateStatus } from "@/i18n";
 import { api } from "@/lib/api";
@@ -17,6 +18,7 @@ import type { Board, BoardCard } from "@/types/api";
 export default function PortalTableroPage() {
   const { token, user } = useAuth();
   const { t, locale } = useTranslation();
+  const modal = useModal();
   const [board, setBoard] = useState<Board | null>(null);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<BoardCard | null>(null);
@@ -53,7 +55,11 @@ export default function PortalTableroPage() {
     if (!token) return;
     await api.post(`/boards/cards/${cardId}/credentials`, creds, token);
     setCreds({ username: "", password: "" });
-    alert(t("portalBoard.credentialsSaved"));
+    await modal.alert({
+      title: t("portalBoard.saveCredentials"),
+      message: t("portalBoard.credentialsSaved"),
+      variant: "success",
+    });
     load();
   }
 

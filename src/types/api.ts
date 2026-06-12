@@ -65,6 +65,7 @@ export interface Notification {
   channel: string;
   title: string;
   body: string;
+  payload?: { client_id?: number; [key: string]: unknown } | null;
   read_at: string | null;
   created_at: string;
 }
@@ -86,6 +87,18 @@ export interface Client {
   addresses?: Address[];
   vehicles?: Vehicle[];
   documents?: DocumentBrief[];
+}
+
+export interface ClientConflict {
+  client_id: number;
+  client_name: string;
+  client_email: string;
+}
+
+export interface ClientAvailability {
+  available: boolean;
+  email: ClientConflict | null;
+  phone: ClientConflict | null;
 }
 
 export interface Address {

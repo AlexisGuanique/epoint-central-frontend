@@ -5,7 +5,7 @@ import { NotificationsList } from "@/components/notifications/NotificationsList"
 import { PageContent } from "@/components/ui/Card";
 import { useTranslation } from "@/contexts/LanguageContext";
 
-export default function NotificacionesPage() {
+export default function PortalNotificacionesPage() {
   const { t } = useTranslation();
 
   return (

@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
+import { setUnauthorizedHandler } from "@/lib/auth-unauthorized";
 import { clearToken, getToken, setToken } from "@/lib/auth-storage";
 import type { LoginResponse, User } from "@/types/api";
 
@@ -53,6 +54,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       .finally(() => setIsLoading(false));
   }, [refreshUser]);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearToken();
+      setUser(null);
+      setTokenState(null);
+      router.replace("/login");
+    });
+    return () => setUnauthorizedHandler(null);
+  }, [router]);
 
   const login = useCallback(
     async (email: string, password: string) => {
