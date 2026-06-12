@@ -1,0 +1,192 @@
+export interface RoleBrief {
+  id: number;
+  code: string;
+  name: string;
+}
+
+export interface AreaBrief {
+  id: number;
+  code: string;
+  name: string;
+}
+
+export interface User {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string | null;
+  role: RoleBrief;
+  area: AreaBrief | null;
+  must_change_password: boolean;
+  is_active: boolean;
+  last_login_at: string | null;
+  created_at: string;
+  permissions?: string[];
+  client_id?: number | null;
+}
+
+export interface Area {
+  id: number;
+  code: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Role {
+  id: number;
+  code: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  permissions: { id: number; code: string; name: string }[];
+}
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  must_change_password: boolean;
+}
+
+export interface Notification {
+  id: number;
+  event_type: string;
+  channel: string;
+  title: string;
+  body: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface Client {
+  id: number;
+  status: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  rejection_reason: string | null;
+  rejected_at: string | null;
+  approved_at: string | null;
+  date_of_birth: string | null;
+  has_ssn: boolean;
+  registered_by_user_id: number;
+  created_at: string;
+  addresses?: Address[];
+  vehicles?: Vehicle[];
+  documents?: DocumentBrief[];
+}
+
+export interface Address {
+  id: number;
+  type: string;
+  street: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  residence_since_month: number | null;
+  residence_since_year: number | null;
+}
+
+export interface Vehicle {
+  id: number;
+  order: number;
+  model: string;
+  year: number;
+  color: string;
+}
+
+export interface DocumentBrief {
+  id: number;
+  type: string;
+  verification_status: string;
+  original_filename: string;
+  expires_at: string | null;
+  uploaded_at: string;
+}
+
+export interface BoardCard {
+  id: number;
+  title: string;
+  description_md: string | null;
+  instructions_md: string | null;
+  external_links: string | null;
+  status: string;
+  position: number;
+  requires_credentials: boolean;
+  requires_file_upload: boolean;
+  client_result_text: string | null;
+  comments: CardComment[];
+  attachments: CardAttachment[];
+  has_credentials: boolean;
+}
+
+export interface CardComment {
+  id: number;
+  body: string;
+  is_internal: boolean;
+  author_name: string;
+  created_at: string;
+}
+
+export interface CardAttachment {
+  id: number;
+  type: string;
+  original_filename: string;
+  download_url: string | null;
+}
+
+export interface BoardList {
+  id: number;
+  title: string;
+  position: number;
+  cards: BoardCard[];
+}
+
+export interface Board {
+  id: number;
+  client_id: number;
+  template_code: string;
+  lists: BoardList[];
+}
+
+export const CLIENT_STATUS_LABELS: Record<string, string> = {
+  PENDIENTE_DE_REVISION: "Pendiente de revisión",
+  RECHAZADO: "Rechazado",
+  APROBADO_PARA_ONBOARDING: "Aprobado",
+  EN_CARGA_DATOS: "En carga de datos",
+  DOCUMENTOS_EN_REVISION: "Documentos en revisión",
+  LISTO_PARA_TABLERO: "Listo para tablero",
+  ONBOARDING_EN_PROGRESO: "Onboarding en progreso",
+  ONBOARDING_COMPLETADO: "Completado",
+  INACTIVO: "Inactivo",
+};
+
+export const DOCUMENT_TYPES = [
+  { value: "SSN_CARD", label: "Tarjeta SSN" },
+  { value: "DRIVERS_LICENSE_FRONT", label: "Licencia (frente)" },
+  { value: "DRIVERS_LICENSE_BACK", label: "Licencia (dorso)" },
+  { value: "UTILITY_BILL", label: "Utility Bill" },
+  { value: "BANK_STATEMENT", label: "Bank Statement" },
+  { value: "PASSPORT", label: "Pasaporte" },
+  { value: "GREEN_CARD", label: "Green Card" },
+  { value: "WORK_PERMIT", label: "Permiso de trabajo" },
+];
+
+export const TASK_STATUS_LABELS: Record<string, string> = {
+  PENDIENTE: "Pendiente",
+  EN_PROGRESO: "En progreso",
+  EN_REVISION: "En revisión",
+  COMPLETADA: "Completada",
+};
