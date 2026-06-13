@@ -52,7 +52,7 @@ export default function AreasPage() {
         {!loading && !error && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {areas.map((area) => (
-              <Card key={area.id} hover className="p-5">
+              <Card key={area.id} hover className="p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-bold text-slate-900">{area.name}</h3>

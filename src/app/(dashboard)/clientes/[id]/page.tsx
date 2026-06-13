@@ -5,6 +5,9 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Header } from "@/components/layout/Header";
+import { PortalCredentialsCard } from "@/components/clients/PortalCredentialsCard";
+import { DocumentViewerModal } from "@/components/documents/DocumentViewerModal";
+import { DocumentThumbnail } from "@/components/portal/DocumentThumbnail";
 import { StatusBadge, VerificationBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, PageContent } from "@/components/ui/Card";
@@ -17,10 +20,10 @@ import { useClientWorkflow } from "@/hooks/useClientWorkflow";
 import { formatClientConflict, useClientAvailabilityCheck } from "@/hooks/useClientAvailabilityCheck";
 import { translateStatus } from "@/i18n";
 import { ApiError, api, isUnauthorizedError } from "@/lib/api";
-import type { Address, Board, Client, Vehicle } from "@/types/api";
+import { loadPortalCredentials } from "@/lib/portal-credentials-storage";
+import type { Address, Board, Client, DocumentBrief, Vehicle } from "@/types/api";
 
 const EDITABLE_STATUSES = ["PENDIENTE_DE_REVISION", "RECHAZADO"];
-const BOARD_STATUSES = ["LISTO_PARA_TABLERO", "ONBOARDING_EN_PROGRESO", "ONBOARDING_COMPLETADO"];
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -60,6 +63,8 @@ export default function ClienteDetailPage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "" });
   const [saving, setSaving] = useState(false);
+  const [portalPassword, setPortalPassword] = useState<string | null>(null);
+  const [viewingDoc, setViewingDoc] = useState<DocumentBrief | null>(null);
   const { availability, checking, hasConflict } = useClientAvailabilityCheck(
     token,
     form.email,
@@ -86,7 +91,7 @@ export default function ClienteDetailPage() {
         email: c.email,
         phone: c.phone,
       });
-      if (BOARD_STATUSES.includes(c.status)) {
+      if (c.approved_at) {
         const b = await api.get<Board>(`/boards/client/${id}`, token).catch(() => null);
         setBoard(b);
       } else {
@@ -104,6 +109,12 @@ export default function ClienteDetailPage() {
   useEffect(() => {
     void load().catch(() => {});
   }, [load]);
+
+  useEffect(() => {
+    if (!client?.id) return;
+    const stored = loadPortalCredentials(client.id);
+    setPortalPassword(stored?.tempPassword ?? null);
+  }, [client?.id, client?.has_portal_access]);
 
   const clientName = client ? `${client.first_name} ${client.last_name}` : "";
   const canEdit =
@@ -143,7 +154,11 @@ export default function ClienteDetailPage() {
   async function handleApprove() {
     if (!client) return;
     const ok = await approveClient(client.id, clientName);
-    if (ok) load();
+    if (ok) {
+      await load();
+      const stored = loadPortalCredentials(client.id);
+      setPortalPassword(stored?.tempPassword ?? null);
+    }
   }
 
   async function handleReject() {
@@ -210,13 +225,13 @@ export default function ClienteDetailPage() {
             <Link href="/clientes" className="btn btn-secondary btn-sm">← {t("common.back")}</Link>
           </div>
         </div>
-        <Card className="p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+        <Card className="p-4 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{t("common.status")}</p>
               <div className="mt-2"><StatusBadge status={client.status} /></div>
             </div>
-            <div className="text-right text-sm text-slate-500">
+            <div className="text-sm text-slate-500 sm:text-right">
               ID #{client.id}
             </div>
           </div>
@@ -227,8 +242,18 @@ export default function ClienteDetailPage() {
           )}
         </Card>
 
+        {client.has_portal_access && (
+          <PortalCredentialsCard
+            client={client}
+            tempPassword={portalPassword}
+            token={token}
+            canReset={hasPermission("clients:approve")}
+            onPasswordUpdated={setPortalPassword}
+          />
+        )}
+
         {editing ? (
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <h2 className="mb-5 text-sm font-bold uppercase tracking-wider text-slate-400">
               {t("clientDetail.editBasic")}
             </h2>
@@ -249,7 +274,7 @@ export default function ClienteDetailPage() {
             </form>
           </Card>
         ) : (
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <h2 className="mb-5 text-sm font-bold uppercase tracking-wider text-slate-400">
               {t("clientDetail.overview")}
             </h2>
@@ -264,16 +289,16 @@ export default function ClienteDetailPage() {
           </Card>
         )}
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <h2 className="mb-5 text-sm font-bold uppercase tracking-wider text-slate-400">{t("clientDetail.timeline")}</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
             <InfoRow label={t("clientDetail.registeredAt")} value={formatDate(client.created_at, locale)} />
             <InfoRow label={t("clientDetail.approvedAt")} value={formatDate(client.approved_at, locale)} />
             <InfoRow label={t("clientDetail.rejectedAt")} value={formatDate(client.rejected_at, locale)} />
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <h2 className="mb-5 text-sm font-bold uppercase tracking-wider text-slate-400">{t("clientDetail.addresses")}</h2>
           {client.addresses && client.addresses.length > 0 ? (
             <div className="space-y-3">
@@ -291,7 +316,7 @@ export default function ClienteDetailPage() {
           )}
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <h2 className="mb-5 text-sm font-bold uppercase tracking-wider text-slate-400">{t("clientDetail.vehicles")}</h2>
           {client.vehicles && client.vehicles.length > 0 ? (
             <div className="grid gap-3 sm:grid-cols-2">
@@ -307,18 +332,30 @@ export default function ClienteDetailPage() {
           )}
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <h2 className="mb-5 text-sm font-bold uppercase tracking-wider text-slate-400">{t("clientDetail.documents")}</h2>
           {client.documents && client.documents.length > 0 ? (
             <div className="space-y-3">
               {client.documents.map((d) => (
                 <div key={d.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-                  <div>
-                    <p className="font-medium text-slate-800">{translateStatus(locale, "documentTypes", d.type)}</p>
-                    <p className="text-sm text-slate-500">{d.original_filename}</p>
-                    <p className="mt-1 text-xs text-slate-400">{formatDate(d.uploaded_at, locale)}</p>
+                  <div className="flex min-w-0 items-start gap-3">
+                    {d.download_url ? (
+                      <DocumentThumbnail doc={d} viewLabel={t("portalDocs.viewDocument")} />
+                    ) : null}
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-800">{translateStatus(locale, "documentTypes", d.type)}</p>
+                      <p className="text-sm text-slate-500">{d.original_filename}</p>
+                      <p className="mt-1 text-xs text-slate-400">{formatDate(d.uploaded_at, locale)}</p>
+                    </div>
                   </div>
-                  <VerificationBadge status={d.verification_status} />
+                  <div className="flex flex-wrap items-center gap-2">
+                    {d.download_url && (
+                      <Button type="button" size="sm" variant="secondary" onClick={() => setViewingDoc(d)}>
+                        {t("portalDocs.viewDocument")}
+                      </Button>
+                    )}
+                    <VerificationBadge status={d.verification_status} />
+                  </div>
                 </div>
               ))}
             </div>
@@ -328,7 +365,7 @@ export default function ClienteDetailPage() {
         </Card>
 
         {board && (
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <h2 className="mb-2 text-sm font-bold uppercase tracking-wider text-slate-400">{t("clientDetail.board")}</h2>
             <p className="text-slate-600">
               {t("clientDetail.boardSummary", {
@@ -339,6 +376,16 @@ export default function ClienteDetailPage() {
           </Card>
         )}
       </PageContent>
+
+      {viewingDoc?.download_url && (
+        <DocumentViewerModal
+          url={viewingDoc.download_url}
+          filename={viewingDoc.original_filename}
+          mimeType={viewingDoc.mime_type}
+          title={translateStatus(locale, "documentTypes", viewingDoc.type)}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </>
   );
 }

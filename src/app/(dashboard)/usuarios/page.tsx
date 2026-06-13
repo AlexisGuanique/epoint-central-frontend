@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Header } from "@/components/layout/Header";
 import { ActiveBadge } from "@/components/ui/Badge";
-import { PageContent } from "@/components/ui/Card";
+import { Card, PageContent } from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/contexts/LanguageContext";
@@ -50,7 +50,24 @@ export default function UsuariosPage() {
         )}
         {error && <div className="alert alert-error">{error}</div>}
         {!loading && !error && (
-          <div className="table-wrap">
+          <>
+            <div className="space-y-3 md:hidden">
+              {users.map((user) => (
+                <Card key={user.id} className="p-4">
+                  <p className="font-semibold text-slate-800">
+                    {user.first_name} {user.last_name}
+                  </p>
+                  <p className="mt-1 break-all text-sm text-slate-500">{user.email}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="badge badge-blue">{user.role.name}</span>
+                    <span className="text-sm text-slate-600">{user.area?.name ?? t("common.dash")}</span>
+                    <ActiveBadge active={user.is_active} />
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            <div className="hidden md:block table-wrap">
             <table className="table-modern">
               <thead>
                 <tr>
@@ -77,7 +94,8 @@ export default function UsuariosPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </PageContent>
     </>

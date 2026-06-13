@@ -3,8 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { Sidebar } from "@/components/layout/Sidebar";
+import { AppShell } from "@/components/layout/AppShell";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ShellProvider } from "@/contexts/ShellContext";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -25,9 +26,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div className="flex min-h-screen app-shell-bg">
-      <Sidebar />
-      <main className="flex min-w-0 flex-1 flex-col">{children}</main>
-    </div>
+    <ShellProvider>
+      <AppShell>{children}</AppShell>
+    </ShellProvider>
   );
 }

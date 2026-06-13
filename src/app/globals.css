@@ -293,7 +293,8 @@ body {
 
 /* ── Tablas ───────────────────────────────────────── */
 .table-wrap {
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-soft);
   box-shadow: var(--shadow-md);
@@ -345,9 +346,15 @@ body {
   background: white;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
   box-shadow: var(--shadow-md);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .stat-card {
+    padding: 1.25rem 1.5rem;
+  }
 }
 
 .stat-card:hover {
@@ -396,11 +403,18 @@ body {
   inset: 0;
   z-index: 50;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   background: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(4px);
-  padding: 1rem;
+  padding: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .modal-overlay {
+    align-items: center;
+    padding: 1rem;
+  }
 }
 
 .modal-panel {
@@ -410,9 +424,52 @@ body {
   overflow-y: auto;
   border-radius: var(--radius-xl);
   background: white;
-  padding: 1.75rem;
+  padding: 1.25rem;
   box-shadow: var(--shadow-xl);
   border: 1px solid var(--border-soft);
+}
+
+@media (min-width: 640px) {
+  .modal-panel {
+    padding: 1.75rem;
+    border-radius: var(--radius-xl);
+  }
+}
+
+.modal-panel-lg {
+  max-width: min(56rem, calc(100vw - 2rem));
+}
+
+@media (max-width: 639px) {
+  .modal-panel {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    max-height: 85vh;
+  }
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .modal-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}
+
+.modal-actions .btn {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .modal-actions .btn {
+    width: auto;
+  }
 }
 
 /* ── Step cards (portal) ──────────────────────────── */
@@ -421,11 +478,17 @@ body {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-soft);
   background: white;
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
   box-shadow: var(--shadow-sm);
   transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .step-card {
+    padding: 1.25rem 1.5rem;
+  }
 }
 
 .step-card::before {

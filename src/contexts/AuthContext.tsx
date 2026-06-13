@@ -73,11 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       setToken(response.access_token);
       setTokenState(response.access_token);
-      const me = await api.get<User>("/auth/me", response.access_token);
-      setUser(me);
+      setUser(response.user);
       if (response.must_change_password) {
         router.push("/cambiar-contrasena");
-      } else if (me.role.code === "CLIENT") {
+      } else if (response.user.role.code === "CLIENT") {
         router.push("/portal");
       } else {
         router.push("/dashboard");

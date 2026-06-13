@@ -28,7 +28,7 @@ export default function PortalHomePage() {
         subtitle={t("portal.subtitle")}
       />
       <PageContent className="space-y-6">
-        <Card className="relative overflow-hidden p-6 lg:p-8">
+        <Card className="relative overflow-hidden p-4 sm:p-6 lg:p-8">
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-blue-100/60 blur-2xl" />
           <div className="relative">
             <h2 className="text-xl font-bold text-slate-900">{t("portal.welcomeTitle")}</h2>
@@ -71,7 +71,7 @@ function StepCard({
       </span>
       <h3 className="font-bold text-slate-900">{title}</h3>
       <p className="mt-1.5 text-sm text-slate-500">{desc}</p>
-      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 opacity-0 transition group-hover:opacity-100">
+      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 opacity-100 sm:opacity-0 sm:transition sm:group-hover:opacity-100">
         {goLabel}
       </span>
     </Link>

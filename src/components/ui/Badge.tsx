@@ -47,10 +47,11 @@ export function VerificationBadge({ status }: { status: string }) {
   const { locale } = useTranslation();
   const label = translateStatus(locale, "verificationStatus", status);
   const verificationBadge: Record<string, string> = {
-    PENDING: "badge-amber",
-    APPROVED: "badge-green",
-    REJECTED: "badge-red",
-    MANUAL_REVIEW: "badge-blue",
+    PENDIENTE: "badge-amber",
+    EN_PROCESO: "badge-blue",
+    APROBADO: "badge-green",
+    RECHAZADO: "badge-red",
+    PROXIMO_A_VENCER: "badge-amber",
   };
   return <span className={`badge ${verificationBadge[status] ?? "badge-slate"}`}>{label}</span>;
 }

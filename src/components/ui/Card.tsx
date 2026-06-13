@@ -13,7 +13,7 @@ export function Card({
 }
 
 export function PageContent({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`flex-1 p-6 lg:p-8 ${className}`}>{children}</div>;
+  return <div className={`flex-1 px-4 py-4 sm:p-6 lg:p-8 ${className}`}>{children}</div>;
 }
 
 export function EmptyState({ title, description }: { title: string; description?: string }) {

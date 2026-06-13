@@ -76,9 +76,9 @@ export default function PortalTableroPage() {
           </div>
         )}
         {board && (
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
             {board.lists.map((list) => (
-              <div key={list.id} className="kanban-column w-80 shrink-0 p-3">
+              <div key={list.id} className="kanban-column w-[min(18rem,80vw)] shrink-0 snap-start p-3 sm:w-80">
                 <h3 className="mb-3 px-1 text-sm font-bold uppercase tracking-wider text-slate-500">
                   {list.title}
                 </h3>

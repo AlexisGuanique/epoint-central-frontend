@@ -52,7 +52,7 @@ export default function RolesPage() {
         {!loading && !error && (
           <div className="space-y-4">
             {roles.map((role) => (
-              <Card key={role.id} className="p-5">
+              <Card key={role.id} className="p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-bold text-slate-900">{role.name}</h3>

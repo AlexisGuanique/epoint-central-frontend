@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { useModal } from "@/contexts/ModalContext";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { ApiError, api } from "@/lib/api";
+import { savePortalCredentials } from "@/lib/portal-credentials-storage";
 import type { Client } from "@/types/api";
 
 export interface AdvisorOption {
@@ -72,6 +73,10 @@ export function useClientWorkflow(token: string | null) {
               { advisor_user_id: advisorId },
               token,
             );
+            savePortalCredentials(clientId, {
+              email: res.client.email,
+              tempPassword: res.temp_password,
+            });
             return {
               title: t("clients.approvedTitle"),
               message: t("clients.approvedMessage", { name: clientName ?? "" }),

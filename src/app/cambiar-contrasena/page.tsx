@@ -52,7 +52,7 @@ export default function CambiarContrasenaPage() {
 
   return (
     <div className="login-bg flex min-h-screen items-center justify-center px-4 py-12">
-      <div className="card-glass relative w-full max-w-md p-8 lg:p-10">
+      <div className="card-glass relative w-full max-w-md p-6 sm:p-8 lg:p-10">
         <div className="absolute right-6 top-6">
           <LanguageSwitcher />
         </div>

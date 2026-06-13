@@ -218,7 +218,7 @@ function ActiveModal({ state, onClose }: { state: ModalState; onClose: () => voi
           copyLabel={t("modal.copy")}
           copiedLabel={t("modal.copied")}
         />
-        <div className="mt-6 flex justify-end">
+        <div className="modal-actions">
           <Button type="button" onClick={() => finish(success)}>
             {t("modal.ok")}
           </Button>
@@ -238,7 +238,7 @@ function ActiveModal({ state, onClose }: { state: ModalState; onClose: () => voi
           copyLabel={t("modal.copy")}
           copiedLabel={t("modal.copied")}
         />
-        <div className="mt-6 flex justify-end">
+        <div className="modal-actions">
           <Button type="button" onClick={onClose}>
             {t("modal.ok")}
           </Button>
@@ -253,7 +253,7 @@ function ActiveModal({ state, onClose }: { state: ModalState; onClose: () => voi
     return (
       <ModalShell title={state.options.title}>
         <p className="text-sm leading-relaxed text-slate-600">{state.options.message}</p>
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="modal-actions">
           <Button type="button" variant="secondary" onClick={() => { state.resolve(false); onClose(); }}>
             {state.options.cancelLabel ?? t("common.cancel")}
           </Button>
@@ -299,7 +299,7 @@ function ActiveModal({ state, onClose }: { state: ModalState; onClose: () => voi
             placeholder={state.options.placeholder}
           />
         )}
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="modal-actions">
           <Button type="button" variant="secondary" onClick={() => { state.resolve(null); onClose(); }}>
             {state.options.cancelLabel ?? t("common.cancel")}
           </Button>
@@ -342,7 +342,7 @@ function ActiveModal({ state, onClose }: { state: ModalState; onClose: () => voi
             {t("clients.assignedAdvisor")}: <strong>{state.options.advisors[0].label}</strong>
           </p>
         )}
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="modal-actions">
           <Button type="button" variant="secondary" onClick={() => { state.resolve(false); onClose(); }}>
             {state.options.cancelLabel ?? t("common.cancel")}
           </Button>
@@ -379,7 +379,7 @@ function ActiveModal({ state, onClose }: { state: ModalState; onClose: () => voi
             placeholder={state.options.reasonPlaceholder}
           />
         </div>
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="modal-actions">
           <Button type="button" variant="secondary" onClick={() => { state.resolve(false); onClose(); }}>
             {state.options.cancelLabel ?? t("common.cancel")}
           </Button>

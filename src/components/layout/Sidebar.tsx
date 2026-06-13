@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { NotificationBadge } from "@/components/ui/NotificationBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
+import { useShell } from "@/contexts/ShellContext";
 import { useTranslation } from "@/contexts/LanguageContext";
 
 const internalNav = [
@@ -38,6 +39,7 @@ export function Sidebar() {
   const { user, hasPermission } = useAuth();
   const { t } = useTranslation();
   const { unreadCount } = useNotifications();
+  const { mobileOpen, closeMobile } = useShell();
   const isClient = user?.role.code === "CLIENT";
 
   const items = isClient
@@ -45,10 +47,14 @@ export function Sidebar() {
     : internalNav.filter((item) => !item.permission || hasPermission(item.permission));
 
   return (
-    <aside className="relative flex w-[17.5rem] shrink-0 flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white shadow-xl">
+    <aside
+      className={`fixed inset-y-0 left-0 z-50 flex w-[min(17.5rem,85vw)] flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white shadow-xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-[17.5rem] lg:shrink-0 lg:translate-x-0 ${
+        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      }`}
+    >
       <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-blue-500/20 to-transparent" />
 
-      <div className="border-b border-white/5 px-6 py-6">
+      <div className="flex items-center justify-between border-b border-white/5 px-4 py-5 sm:px-6 sm:py-6">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30">
             <span className="text-sm font-bold">eP</span>
@@ -60,9 +66,19 @@ export function Sidebar() {
             </p>
           </div>
         </div>
+        <button
+          type="button"
+          className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden"
+          aria-label={t("common.closeMenu")}
+          onClick={closeMobile}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+            <path strokeLinecap="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-5">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
         <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
           {t("nav.navigation")}
         </p>
@@ -72,6 +88,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={closeMobile}
               className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                 active
                   ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25"
@@ -91,7 +108,7 @@ export function Sidebar() {
       {user && (
         <div className="border-t border-white/5 p-4">
           <div className="flex items-center gap-3 rounded-xl bg-white/5 p-3 backdrop-blur-sm">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-xs font-bold">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-xs font-bold">
               {user.first_name[0]}
               {user.last_name[0]}
             </div>

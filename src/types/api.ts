@@ -57,6 +57,7 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
   must_change_password: boolean;
+  user: User;
 }
 
 export interface Notification {
@@ -84,9 +85,18 @@ export interface Client {
   has_ssn: boolean;
   registered_by_user_id: number;
   created_at: string;
+  has_portal_access?: boolean;
+  portal_email?: string | null;
+  portal_login_url?: string | null;
   addresses?: Address[];
   vehicles?: Vehicle[];
   documents?: DocumentBrief[];
+}
+
+export interface ClientPortalPassword {
+  email: string;
+  temp_password: string;
+  portal_login_url: string;
 }
 
 export interface ClientConflict {
@@ -125,6 +135,8 @@ export interface DocumentBrief {
   type: string;
   verification_status: string;
   original_filename: string;
+  mime_type?: string | null;
+  download_url?: string | null;
   expires_at: string | null;
   uploaded_at: string;
 }

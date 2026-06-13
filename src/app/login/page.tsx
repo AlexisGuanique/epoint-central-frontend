@@ -83,7 +83,7 @@ export default function LoginPage() {
       </div>
 
       <div className="flex flex-1 items-center justify-center p-6 lg:p-12">
-        <div className="card-glass relative z-10 w-full max-w-md p-8 lg:p-10">
+        <div className="card-glass relative z-10 w-full max-w-md p-6 sm:p-8 lg:p-10">
           <div className="absolute right-6 top-6 lg:right-8 lg:top-8">
             <LanguageSwitcher />
           </div>

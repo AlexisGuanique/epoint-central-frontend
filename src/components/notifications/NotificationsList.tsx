@@ -49,7 +49,7 @@ function NotificationCard({
     >
       <Card
         hover={canNavigate && !opening}
-        className={`p-5 transition-all ${opening ? "ring-2 ring-blue-300 bg-blue-50/40" : "ring-2 ring-blue-100"}`}
+        className={`p-4 transition-all sm:p-5 ${opening ? "ring-2 ring-blue-300 bg-blue-50/40" : "ring-2 ring-blue-100"}`}
       >
         {opening && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/80 backdrop-blur-[2px]">
@@ -60,7 +60,7 @@ function NotificationCard({
             <p className="text-xs font-semibold text-blue-700">{openingLabel}</p>
           </div>
         )}
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
@@ -70,7 +70,7 @@ function NotificationCard({
             <p className="mt-2 text-xs text-slate-400">{formatDateTime(n.created_at, locale)}</p>
           </div>
           {!opening && (
-            <Button variant="ghost" size="sm" onClick={(e) => onDismiss(e, [n.id])}>
+            <Button variant="ghost" size="sm" className="w-full shrink-0 sm:w-auto" onClick={(e) => onDismiss(e, [n.id])}>
               {dismissLabel}
             </Button>
           )}

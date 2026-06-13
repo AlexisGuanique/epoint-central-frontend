@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 
+import { DocumentThumbnail } from "@/components/portal/DocumentThumbnail";
 import { Header } from "@/components/layout/Header";
 import { VerificationBadge } from "@/components/ui/Badge";
 import { Card, PageContent } from "@/components/ui/Card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { translateStatus } from "@/i18n";
-import { api } from "@/lib/api";
-import { DOCUMENT_TYPES, type Client } from "@/types/api";
+import { ApiError, api } from "@/lib/api";
+import { DOCUMENT_TYPES, type Client, type DocumentBrief } from "@/types/api";
 
 export default function PortalDocumentosPage() {
   const { token } = useAuth();
@@ -21,12 +22,35 @@ export default function PortalDocumentosPage() {
 
   function reload() {
     if (!token) return;
-    api.get<Client>("/portal/me", token).then(setClient);
+    Promise.all([
+      api.get<Client>("/portal/me", token),
+      api.get<DocumentBrief[]>("/portal/documents", token),
+    ]).then(([profile, documents]) => {
+      setClient({ ...profile, documents });
+    });
   }
 
   useEffect(() => {
     reload();
   }, [token]);
+
+  const isVerifying = client?.documents?.some(
+    (d) => d.verification_status === "PENDIENTE" || d.verification_status === "EN_PROCESO",
+  );
+
+  useEffect(() => {
+    if (!token || !isVerifying) return;
+    const interval = window.setInterval(() => reload(), 5000);
+    return () => window.clearInterval(interval);
+  }, [token, isVerifying]);
+
+  function mergeUploadedDoc(uploaded: DocumentBrief) {
+    setClient((prev) => {
+      if (!prev) return prev;
+      const others = (prev.documents ?? []).filter((d) => d.type !== uploaded.type);
+      return { ...prev, documents: [...others, uploaded] };
+    });
+  }
 
   async function handleUpload(docType: string, file: File) {
     if (!token) return;
@@ -34,31 +58,17 @@ export default function PortalDocumentosPage() {
     setMessage("");
     setIsError(false);
     try {
-      const urlData = await api.post<{ upload_url: string; storage_key: string }>(
-        "/documents/upload-url",
-        { document_type: docType, filename: file.name, content_type: file.type },
-        token,
-      );
-      await fetch(urlData.upload_url, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-      await api.post(
-        "/documents/confirm",
-        {
-          document_type: docType,
-          storage_key: urlData.storage_key,
-          original_filename: file.name,
-          mime_type: file.type,
-        },
-        token,
-      );
+      const formData = new FormData();
+      formData.append("document_type", docType);
+      formData.append("file", file);
+
+      const uploaded = await api.upload<DocumentBrief>("/documents/upload", formData, token);
+      mergeUploadedDoc(uploaded);
       setMessage(t("portalDocs.uploadSuccess"));
       setIsError(false);
       reload();
-    } catch {
-      setMessage(t("portalDocs.uploadError"));
+    } catch (err) {
+      setMessage(err instanceof ApiError ? err.message : t("portalDocs.uploadError"));
       setIsError(true);
     } finally {
       setUploading(null);
@@ -80,15 +90,19 @@ export default function PortalDocumentosPage() {
             const doc = client?.documents?.find((d) => d.type === dt.value);
             const label = translateStatus(locale, "documentTypes", dt.value);
             return (
-              <Card key={dt.value} className="p-5">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <div>
+              <Card key={dt.value} className="p-4 sm:p-5">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+                  <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                    {doc ? (
+                      <DocumentThumbnail doc={doc} viewLabel={t("portalDocs.viewDocument")} />
+                    ) : (
+                      <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
+                          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="min-w-0">
                       <h3 className="font-semibold text-slate-900">{label}</h3>
                       {doc ? (
                         <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -100,8 +114,12 @@ export default function PortalDocumentosPage() {
                       )}
                     </div>
                   </div>
-                  <label className="cursor-pointer">
-                    <span className={`btn btn-primary btn-sm ${uploading ? "pointer-events-none opacity-60" : ""}`}>
+                  <label className="block w-full md:w-auto md:justify-self-end">
+                    <span
+                      className={`btn btn-primary btn-sm w-full md:inline-flex md:w-auto md:whitespace-nowrap ${
+                        uploading ? "pointer-events-none opacity-60" : ""
+                      }`}
+                    >
                       {uploading === dt.value ? t("common.uploading") : t("common.upload")}
                     </span>
                     <input
@@ -112,6 +130,7 @@ export default function PortalDocumentosPage() {
                       onChange={(e) => {
                         const f = e.target.files?.[0];
                         if (f) handleUpload(dt.value, f);
+                        e.target.value = "";
                       }}
                     />
                   </label>

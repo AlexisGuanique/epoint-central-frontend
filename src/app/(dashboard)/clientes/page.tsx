@@ -95,7 +95,7 @@ export default function ClientesPage() {
       />
       <PageContent>
         {showForm && (
-          <Card className="mb-6 p-6">
+          <Card className="mb-6 p-4 sm:p-6">
             <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-400">
               {t("clients.newClient")}
             </h3>
@@ -121,7 +121,46 @@ export default function ClientesPage() {
             <LoadingSpinner label={t("clients.loading")} />
           </div>
         ) : (
-          <div className="table-wrap">
+          <>
+            <div className="space-y-3 md:hidden">
+              {clients.map((c) => {
+                const name = `${c.first_name} ${c.last_name}`;
+                return (
+                  <Card key={c.id} className="p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <Link href={`/clientes/${c.id}`} className="font-semibold text-blue-600 hover:underline">
+                          {name}
+                        </Link>
+                        <p className="mt-1 break-all text-sm text-slate-500">{c.email}</p>
+                      </div>
+                      <StatusBadge status={c.status} />
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link href={`/clientes/${c.id}`} className="btn btn-secondary btn-sm">
+                        {t("common.view")}
+                      </Link>
+                      {c.status === "PENDIENTE_DE_REVISION" && hasPermission("clients:approve") && (
+                        <>
+                          <button type="button" onClick={async () => { if (await approveClient(c.id, name)) load(); }} className="btn btn-primary btn-sm">{t("clients.approve")}</button>
+                          <button type="button" onClick={async () => { if (await rejectClient(c.id, name)) load(); }} className="btn btn-danger btn-sm">{t("clients.reject")}</button>
+                        </>
+                      )}
+                      {c.status === "RECHAZADO" && hasPermission("clients:update") && (
+                        <button type="button" onClick={async () => { if (await resubmitClient(c.id, name)) load(); }} className="btn btn-secondary btn-sm">
+                          {t("clients.resubmit")}
+                        </button>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+              {clients.length === 0 && (
+                <Card className="p-8 text-center text-slate-400">{t("clients.empty")}</Card>
+              )}
+            </div>
+
+            <div className="hidden md:block table-wrap">
             <table className="table-modern">
               <thead>
                 <tr>
@@ -173,7 +212,8 @@ export default function ClientesPage() {
                 )}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </PageContent>
     </>
